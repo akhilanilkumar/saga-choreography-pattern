@@ -17,14 +17,14 @@ public class EventConsumerConfig {
     /**
      * Listen to TOPIC payment-event, and check the payment status
      * if Payment-status COMPLETED ? Complete the order : Cancel the order
+     *
      * @return Payment status
      */
     @Bean
     public Consumer<PaymentEvent> paymentEventConsumer() {
-        return paymentEvent -> {
-            orderService.updateOrder(paymentEvent.getPaymentRequest().getOrderId(), purchaseOrder -> {
-                purchaseOrder.setPaymentStatus(paymentEvent.getPaymentStatus());
-            });
-        };
+        return paymentEvent -> orderService.updateOrder(
+                paymentEvent.getPaymentRequest().getOrderId(),
+                purchaseOrder -> purchaseOrder.setPaymentStatus(paymentEvent.getPaymentStatus())
+        );
     }
 }

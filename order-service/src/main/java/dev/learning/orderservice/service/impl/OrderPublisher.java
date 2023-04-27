@@ -14,7 +14,6 @@ public class OrderPublisher implements Publisher {
 
     private final Sinks.Many<OrderEvent> orderSink;
 
-
     @Override
     public void publishEvent(OrderRequest request, OrderStatus status) {
         OrderEvent orderEvent = new OrderEvent(request, status);

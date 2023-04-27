@@ -5,13 +5,17 @@ import dev.learning.model.event.PaymentEvent;
 import dev.learning.model.event.PaymentStatus;
 import dev.learning.model.model.order.OrderRequest;
 import dev.learning.model.model.payment.PaymentRequest;
+import dev.learning.paymentservice.entity.UserBalance;
 import dev.learning.paymentservice.entity.UserTransaction;
 import dev.learning.paymentservice.repository.UserBalanceRepository;
 import dev.learning.paymentservice.repository.UserTransactionRepository;
 import dev.learning.paymentservice.service.PaymentService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -54,5 +58,15 @@ public class PaymentServiceImpl implements PaymentService {
                     transactionRepository.findById(userTransaction.getUserId())
                             .ifPresent(ut -> ut.setAmount(ut.getAmount() + userTransaction.getAmount()));
                 });
+    }
+
+    @PostConstruct
+    public void initUserBalance() {
+        this.balanceRepository.saveAll(List.of(
+                new UserBalance(100, 5000),
+                new UserBalance(101, 5000),
+                new UserBalance(102, 10000),
+                new UserBalance(103, 1000),
+                new UserBalance(104, 6000)));
     }
 }

@@ -8,6 +8,7 @@ import dev.learning.orderservice.repository.OrderRepository;
 import dev.learning.orderservice.service.OrderService;
 import dev.learning.orderservice.service.Publisher;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +21,19 @@ import static dev.learning.model.event.OrderStatus.ORDER_CREATED;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
 
     private final Publisher orderPublisher;
 
+    /**
+     * Save & Publish the order to Cloud Stream
+     *
+     * @param orderRequest Order from client
+     * @return Saved order
+     */
     @Override
     @Transactional
     public PurchaseOrder createOrder(OrderRequest orderRequest) {
@@ -36,12 +44,20 @@ public class OrderServiceImpl implements OrderService {
                 .orderStatus(ORDER_CREATED)
                 .build();
         PurchaseOrder savedOrder = orderRepository.save(purchaseOrder);
+        // Mandatory for mapping when the response is received from payment-service
         orderRequest.setOrderId(savedOrder.getId());
         // Publish ORDER_EVENT topic to kafka
+        log.info("ORDER-EVENT published: {}", orderRequest);
         orderPublisher.publishEvent(orderRequest, ORDER_CREATED);
         return savedOrder;
     }
 
+    /**
+     * Consume the Cloud stream event and update the order using order id
+     *
+     * @param id       Order id
+     * @param consumer function to set payment status
+     */
     @Override
     public void updateOrder(int id, Consumer<PurchaseOrder> consumer) {
         orderRepository.findById(id)
@@ -49,15 +65,7 @@ public class OrderServiceImpl implements OrderService {
                     boolean isPaymentCompleted = purchaseOrder.getPaymentStatus() == PaymentStatus.PAYMENT_COMPLETED;
                     OrderStatus orderStatus = isPaymentCompleted ? ORDER_COMPLETED : ORDER_CANCELLED;
                     purchaseOrder.setOrderStatus(orderStatus);
-                    if (!isPaymentCompleted) {
-                        OrderRequest orderRequest = OrderRequest.builder()
-                                .orderId(purchaseOrder.getId())
-                                .userId(purchaseOrder.getUserId())
-                                .productId(purchaseOrder.getProductId())
-                                .amount(purchaseOrder.getPrice())
-                                .build();
-                        orderPublisher.publishEvent(orderRequest, orderStatus);
-                    }
+                    orderRepository.save(purchaseOrder);
                 }));
     }
 

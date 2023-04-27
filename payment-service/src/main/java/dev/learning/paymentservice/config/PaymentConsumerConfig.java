@@ -3,17 +3,13 @@ package dev.learning.paymentservice.config;
 import dev.learning.model.event.OrderEvent;
 import dev.learning.model.event.OrderStatus;
 import dev.learning.model.event.PaymentEvent;
-import dev.learning.paymentservice.entity.UserBalance;
-import dev.learning.paymentservice.repository.UserBalanceRepository;
 import dev.learning.paymentservice.service.PaymentService;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.function.Function;
 
 @Configuration
@@ -22,10 +18,9 @@ public class PaymentConsumerConfig {
 
     private final PaymentService paymentService;
 
-    private final UserBalanceRepository balanceRepository;
-
     /**
-     * This function act as a consumer of topic: ORDER_EVENT
+     * This function act as both consumer and producer of topic: ORDER_EVENT and PAYMENT_EVENT
+     *
      * @return PaymentEvent
      */
     @Bean
@@ -37,15 +32,5 @@ public class PaymentConsumerConfig {
                 return Mono.fromRunnable(() -> this.paymentService.cancelOrderEvent(orderEvent));
             }
         });
-    }
-
-    @PostConstruct
-    public void initUserBalance() {
-        this.balanceRepository.saveAll(List.of(
-                new UserBalance(100, 5000),
-                new UserBalance(101, 5000),
-                new UserBalance(102, 10000),
-                new UserBalance(103, 1000),
-                new UserBalance(104, 6000)));
     }
 }
