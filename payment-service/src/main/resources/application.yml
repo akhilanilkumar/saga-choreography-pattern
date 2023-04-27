@@ -20,6 +20,9 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
   cloud:
+    function:
+      # The supplier function from PaymentConsumerConfig#paymentProcessor
+      definition: paymentProcessor
     stream:
       bindings:
         paymentProcessor-in-0:
@@ -28,6 +31,3 @@ spring:
         paymentProcessor-out-0:
           # This is the TOPIC_NAME produced by Payment
           destination: payment-event
-    function:
-      # The supplier function from PaymentConsumerConfig#paymentProcessor
-      definition: paymentProcessor

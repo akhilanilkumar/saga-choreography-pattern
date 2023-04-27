@@ -60,10 +60,11 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public void updateOrder(int id, Consumer<PurchaseOrder> consumer) {
-        orderRepository.findById(id)
+        orderRepository
+                .findById(id)
                 .ifPresent(consumer.andThen(purchaseOrder -> {
-                    boolean isPaymentCompleted = purchaseOrder.getPaymentStatus() == PaymentStatus.PAYMENT_COMPLETED;
-                    OrderStatus orderStatus = isPaymentCompleted ? ORDER_COMPLETED : ORDER_CANCELLED;
+                    OrderStatus orderStatus = purchaseOrder.getPaymentStatus() == PaymentStatus.PAYMENT_COMPLETED ?
+                            ORDER_COMPLETED : ORDER_CANCELLED;
                     purchaseOrder.setOrderStatus(orderStatus);
                     orderRepository.save(purchaseOrder);
                 }));
