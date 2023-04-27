@@ -1,0 +1,33 @@
+server:
+  port: 8080
+#  Reactive spring application is running with Netty server, it won't pick up the application context path
+#  servlet:
+#    context-path: /orders
+spring:
+  application:
+    name: order-service
+  datasource:
+    username: rootuser
+    url: jdbc:mysql://mysql-db.cz9eevms0bmy.ap-south-1.rds.amazonaws.com/saga-choreography
+    driverClassName: com.mysql.cj.jdbc.Driver
+    password: zxcv+321
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5Dialect
+        format_sql: true
+  cloud:
+    function:
+      # The supplier function from OrderPublisherConfig#orderSupplier
+      definition: orderSupplier;paymentEventConsumer
+    stream:
+      bindings:
+        orderSupplier-out-0:
+          # This is the TOPIC_NAME produced by Order Service, ref-> Diagram
+          destination: order-event
+        paymentEventConsumer-in-0:
+          # This is the TOPIC_NAME produced by Payment Service, ref-> Diagram
+          destination: payment-event
